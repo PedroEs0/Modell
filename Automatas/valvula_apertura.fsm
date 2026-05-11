@@ -1,0 +1,14 @@
+3
+
+cerrado	0	2
+apertura_media	medio	c	o
+abrir	abierto	c	o
+
+abierto	1	2
+cerrar	cerrado	c	o
+cerrar_medio	medio	c	o
+
+medio	0	2
+apertura_media	abierto	c	o
+cerrar_medio	cerrado	c	o
+

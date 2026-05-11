@@ -1,0 +1,16 @@
+3
+
+vacio	0	2
+abrir	ideal	c	o
+apertura_media	ideal	c	o
+
+ideal	0	4
+cerrar_medio	ideal	c	o
+cerrar	ideal	c	o
+apertura_media	lleno	c	o
+abrir	lleno	c	o
+
+lleno	0	2
+cerrar	ideal	c	o
+cerrar_medio	ideal	c	o
+
