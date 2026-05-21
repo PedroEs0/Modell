@@ -4,9 +4,15 @@
  */
 package Interfaz;
 
+import java.awt.BorderLayout;
 import java.awt.Image;
 import javax.swing.ImageIcon;
 import javax.swing.Timer;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 /**
  *
@@ -20,8 +26,11 @@ public class Tanque extends javax.swing.JFrame {
     Timer timer;
     boolean Detener = false;
     boolean ejecutando = false;
-    
+    boolean desbordado = false;
+    XYSeries serie = new XYSeries("Datos");
+    int x = 0;
     public Tanque() {
+        //Iniciar componentes
         initComponents();
         ImageIcon tanque = new ImageIcon("img/TC8.png");
         int alto = Tanque.getHeight();
@@ -29,8 +38,33 @@ public class Tanque extends javax.swing.JFrame {
         Image tanque_escalado = tanque.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
         ImageIcon tanque_final = new ImageIcon(tanque_escalado);
         Tanque.setIcon(tanque_final);
+        
+        //Grafica
+        XYSeriesCollection datos = new XYSeriesCollection(serie);
+
+        JFreeChart grafica = ChartFactory.createXYLineChart(
+                "Altura Vs Tiempo",
+                "Tiempo",
+                "Altura",
+                datos
+        );
+
+        ChartPanel panel = new ChartPanel(grafica);
+
+        panel.setPreferredSize(Grafica.getSize());
+
+        Grafica.setLayout(new java.awt.BorderLayout());
+
+        Grafica.removeAll();
+        Grafica.add(panel, BorderLayout.CENTER);
+
+        Grafica.revalidate();
+        Grafica.repaint();
     }
-    
+    public void agregarDato(double y) {
+        serie.add(x, y);
+        x++;
+    }
     public void Cambiar_Imagen(double tanque_nivel) {
 
         int canIdeal = Integer.parseInt(CantidadIdeal.getText());
@@ -127,6 +161,8 @@ public class Tanque extends javax.swing.JFrame {
                 }
             }
         }
+        
+
         //ajuste de imagen 
         int alto = Tanque.getHeight();
         int ancho = Tanque.getWidth();
@@ -169,6 +205,8 @@ public class Tanque extends javax.swing.JFrame {
         Abierto_Salida = new javax.swing.JRadioButton();
         Medio_Salida = new javax.swing.JRadioButton();
         Cerrado_Salida = new javax.swing.JRadioButton();
+        automatico = new javax.swing.JRadioButton();
+        Grafica = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -206,7 +244,7 @@ public class Tanque extends javax.swing.JFrame {
 
         jLabel4.setBackground(new java.awt.Color(51, 255, 51));
         jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel4.setText("Cantidad actual (L)");
+        jLabel4.setText("Cantidad actual (M)");
 
         cantidadL.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
         cantidadL.setText("00");
@@ -238,10 +276,10 @@ public class Tanque extends javax.swing.JFrame {
         jPanel2.setBackground(new java.awt.Color(0, 204, 204));
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel2.setText("Cantidad ideal");
+        jLabel2.setText("Cantidad ideal(M)");
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        jLabel3.setText("Cantidad maxima");
+        jLabel3.setText("Cantidad maxima(M)");
 
         CantidadMax.setColumns(3);
         CantidadMax.addActionListener(new java.awt.event.ActionListener() {
@@ -374,46 +412,70 @@ public class Tanque extends javax.swing.JFrame {
                 .addGap(16, 16, 16))
         );
 
+        automatico.setBackground(new java.awt.Color(51, 255, 0));
+        automatico.setText("Simulacion automatica");
+
+        Grafica.setBackground(new java.awt.Color(102, 255, 255));
+
+        javax.swing.GroupLayout GraficaLayout = new javax.swing.GroupLayout(Grafica);
+        Grafica.setLayout(GraficaLayout);
+        GraficaLayout.setHorizontalGroup(
+            GraficaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 499, Short.MAX_VALUE)
+        );
+        GraficaLayout.setVerticalGroup(
+            GraficaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 363, Short.MAX_VALUE)
+        );
+
         javax.swing.GroupLayout FondoLayout = new javax.swing.GroupLayout(Fondo);
         Fondo.setLayout(FondoLayout);
         FondoLayout.setHorizontalGroup(
             FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(FondoLayout.createSequentialGroup()
-                .addComponent(Imagen, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, FondoLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(FondoLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(Imagen, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 16, Short.MAX_VALUE))
                     .addGroup(FondoLayout.createSequentialGroup()
+                        .addContainerGap()
                         .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(INICIAR)
-                            .addComponent(detener, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(199, 199, 199)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(32, 32, 32)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(FondoLayout.createSequentialGroup()
+                                .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(INICIAR)
+                                    .addComponent(detener, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(199, 199, 199)
+                                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(32, 32, 32)
+                                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(FondoLayout.createSequentialGroup()
+                                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(automatico)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(mensaje, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addGap(898, 898, 898))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(Grafica, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         FondoLayout.setVerticalGroup(
             FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(FondoLayout.createSequentialGroup()
                 .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(Imagen, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(Grafica, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(Imagen, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(FondoLayout.createSequentialGroup()
-                        .addGap(120, 120, 120)
+                        .addGap(126, 126, 126)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(FondoLayout.createSequentialGroup()
                         .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mensaje, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(mensaje, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(automatico))
                         .addGap(18, 18, 18)
                         .addComponent(INICIAR)
                         .addGap(18, 18, 18)
@@ -431,13 +493,13 @@ public class Tanque extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(Fondo, javax.swing.GroupLayout.PREFERRED_SIZE, 737, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addComponent(Fondo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(Fondo, javax.swing.GroupLayout.PREFERRED_SIZE, 656, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(Fondo, javax.swing.GroupLayout.PREFERRED_SIZE, 656, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 12, Short.MAX_VALUE))
         );
 
         pack();
@@ -445,7 +507,7 @@ public class Tanque extends javax.swing.JFrame {
 
     private void INICIARActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_INICIARActionPerformed
         //valida que los campos no esten vacios
-        if (CantidadIdeal.getText().isEmpty() || CantidadMax.getText().isEmpty()) {
+    if (CantidadIdeal.getText().isEmpty() || CantidadMax.getText().isEmpty()) {
         mensaje.setText("Campos vacios!!");
         return;
     }
@@ -457,21 +519,59 @@ public class Tanque extends javax.swing.JFrame {
         mensaje.setText("La cantidad maxima es menor a la cantidad ideal");
         return;
     }
+    if (canM<0 || canIdeal<0) {
+        mensaje.setText("Cantidad invalida");
+        return;
+    }
     //se limpia el label de mensaje cada que de la a iniciar
     mensaje.setText("");
     Detener = false;
     
     if (!ejecutando) {
         ejecutando = true;
+        automatico.setEnabled(false);
+        if(automatico.isSelected()){
+            Abierto_Entrada.setSelected(true);
+            Medio_Salida.setSelected(true);
+            
+            
+            Abierto_Salida.setEnabled(false);
+            Cerrado_Salida.setEnabled(false);
+            Medio_Salida.setEnabled(false);
+            Abierto_Entrada.setEnabled(false);
+            Cerrado_Entrada.setEnabled(false);
+            Medio_Entrada.setEnabled(false);
+        }else{
+            Abierto_Entrada.setSelected(false);
+            Medio_Salida.setSelected(false);
+            
+            
+            Abierto_Salida.setEnabled(true);
+            Cerrado_Salida.setEnabled(true);
+            Medio_Salida.setEnabled(true);
+            Abierto_Entrada.setEnabled(true);
+            Cerrado_Entrada.setEnabled(true);
+            Medio_Entrada.setEnabled(true);
+        }
         
         //timer sirve para poder hacer la comparacion en intervalos de tiempo para que se vea mas fluido en la simulacion donde se da el tiempo en milisegundos
-        timer = new Timer(500, e -> {
+        timer = new Timer(100, e -> {
             //envio de los datos en porcentaje y en litro de la cantidad actual
  
-            cantidadL.setText(max  + "L");
+            cantidadL.setText(max  + "m");
             
             Cambiar_Imagen(max);
-            if(max<canM){
+            agregarDato(max);
+            if(desbordado){
+                Cerrado_Entrada.setSelected(true);
+                Abierto_Salida.setSelected(true);
+                if (max<=canIdeal+0.5 && max>=canIdeal-0.5) {
+                    Medio_Entrada.setSelected(true);
+                    Medio_Salida.setSelected(true);
+                    desbordado=false;
+                }
+            }
+            if(max<canM*1.1){
                 if(Abierto_Entrada.isSelected()){
                     max+=1;
                 }else if(Medio_Entrada.isSelected()){ 
@@ -480,7 +580,7 @@ public class Tanque extends javax.swing.JFrame {
                     max+=0;
                 }
             }
-            if(max>canIdeal){
+            if (max>0) {
                 if(Abierto_Salida.isSelected()){
                     max-=1;
                 }else if(Medio_Salida.isSelected()){
@@ -488,8 +588,17 @@ public class Tanque extends javax.swing.JFrame {
                 }else if(Cerrado_Salida.isSelected()){
                     max-=0;
                 }
+            }else if(max<0){
+                max=0;
             }
+                
+                if (max>canM) {
+                desbordado=true;
+                }
             if(Detener){
+                serie.clear();
+                automatico.setEnabled(true);
+                x=0;
                 max=0;
                 timer.stop();
             }
@@ -553,6 +662,7 @@ public class Tanque extends javax.swing.JFrame {
     private javax.swing.JRadioButton Cerrado_Entrada;
     private javax.swing.JRadioButton Cerrado_Salida;
     private javax.swing.JPanel Fondo;
+    private javax.swing.JPanel Grafica;
     private javax.swing.JButton INICIAR;
     private javax.swing.JPanel Imagen;
     private javax.swing.JRadioButton Medio_Entrada;
@@ -560,6 +670,7 @@ public class Tanque extends javax.swing.JFrame {
     private javax.swing.JLabel Tanque;
     private javax.swing.ButtonGroup Valvula_Entrada;
     private javax.swing.ButtonGroup Valvula_Salida;
+    private javax.swing.JRadioButton automatico;
     private javax.swing.JLabel cantidadL;
     private javax.swing.JButton detener;
     private javax.swing.JLabel jLabel2;
