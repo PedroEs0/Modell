@@ -23,7 +23,9 @@ public class Tanque extends javax.swing.JFrame {
      * Creates new form Tanque
      */
     double max = 0;
+    int cont=3;
     Timer timer;
+    Timer timer2;
     boolean Detener = false;
     boolean ejecutando = false;
     boolean desbordado = false;
@@ -32,7 +34,7 @@ public class Tanque extends javax.swing.JFrame {
     public Tanque() {
         //Iniciar componentes
         initComponents();
-        ImageIcon tanque = new ImageIcon("img/TC8.png");
+        ImageIcon tanque = new ImageIcon("img/9.png");
         int alto = Tanque.getHeight();
         int ancho = Tanque.getWidth();
         Image tanque_escalado = tanque.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
@@ -76,6 +78,9 @@ public class Tanque extends javax.swing.JFrame {
         if(Abierto_Entrada.isSelected()){
             
             if(Abierto_Salida.isSelected()){
+                if (max>canMax) {
+                    tanque = new ImageIcon("img/30.png");
+                }else{
                 if(max<canIdeal-(canIdeal/2)){
                     tanque = new ImageIcon("img/1.png");
                 }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
@@ -83,7 +88,11 @@ public class Tanque extends javax.swing.JFrame {
                 }else if(max>=canIdeal+margenIdeal ){
                     tanque = new ImageIcon("img/19.png");
                 }
+                }
             }else if(Medio_Salida.isSelected()){
+                if (max>canMax) {
+                    tanque = new ImageIcon("img/29.png");
+                }else{
                 if(max<canIdeal-(canIdeal/2)){
                     tanque = new ImageIcon("img/2.png");
                 }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
@@ -91,13 +100,18 @@ public class Tanque extends javax.swing.JFrame {
                 }else if(max>=canIdeal+margenIdeal ){
                     tanque = new ImageIcon("img/20.png");
                 }
+                }
             }else if(Cerrado_Salida.isSelected()){
+                if (max>canMax) {
+                    tanque = new ImageIcon("img/28.png");
+                }else{
                 if(max<canIdeal-(canIdeal/2)){
                     tanque = new ImageIcon("img/3.png");
                 }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
                     tanque = new ImageIcon("img/12.png");
                 }else if(max>=canIdeal+margenIdeal){
                     tanque = new ImageIcon("img/21.png");
+                }
                 }
             }
             
@@ -421,7 +435,7 @@ public class Tanque extends javax.swing.JFrame {
         Grafica.setLayout(GraficaLayout);
         GraficaLayout.setHorizontalGroup(
             GraficaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 499, Short.MAX_VALUE)
+            .addGap(0, 493, Short.MAX_VALUE)
         );
         GraficaLayout.setVerticalGroup(
             GraficaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -438,7 +452,8 @@ public class Tanque extends javax.swing.JFrame {
                         .addComponent(Imagen, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 16, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
+                        .addComponent(Grafica, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(FondoLayout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -453,11 +468,10 @@ public class Tanque extends javax.swing.JFrame {
                             .addGroup(FondoLayout.createSequentialGroup()
                                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addComponent(automatico)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(mensaje, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(Grafica, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(mensaje, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(automatico))))))
+                .addContainerGap())
         );
         FondoLayout.setVerticalGroup(
             FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -469,24 +483,24 @@ public class Tanque extends javax.swing.JFrame {
                     .addGroup(FondoLayout.createSequentialGroup()
                         .addGap(126, 126, 126)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(FondoLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mensaje, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(automatico))
                         .addGap(18, 18, 18)
                         .addComponent(INICIAR)
                         .addGap(18, 18, 18)
                         .addComponent(detener))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, FondoLayout.createSequentialGroup()
-                        .addGap(99, 99, 99)
+                    .addGroup(FondoLayout.createSequentialGroup()
+                        .addGap(67, 67, 67)
                         .addGroup(FondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(84, 84, 84)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addGap(18, 18, 18)
+                .addComponent(mensaje, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(11, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -497,9 +511,7 @@ public class Tanque extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(Fondo, javax.swing.GroupLayout.PREFERRED_SIZE, 656, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 12, Short.MAX_VALUE))
+            .addComponent(Fondo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -571,7 +583,7 @@ public class Tanque extends javax.swing.JFrame {
                     desbordado=false;
                 }
             }
-            if(max<canM*1.1){
+            if(max<canM*1.2){
                 if(Abierto_Entrada.isSelected()){
                     max+=1;
                 }else if(Medio_Entrada.isSelected()){ 
@@ -592,9 +604,24 @@ public class Tanque extends javax.swing.JFrame {
                 max=0;
             }
                 
-                if (max>canM) {
-                desbordado=true;
+            if (max>canM*1.1) {
+            Cambiar_Imagen(max);
+            cont=3;
+            desbordado=true;
+            timer.stop();
+            timer2 = new Timer(1000, a -> {
+                agregarDato(max);
+                Cambiar_Imagen(max);
+                mensaje.setText("La cantidad es superior a la maxima, iniciando contencion del desborde en "+cont+" segundos");
+                cont--;
+                if (cont<0){
+                    mensaje.setText("");
+                    timer.start();
+                    timer2.stop();
                 }
+            });
+            timer2.start();
+            }
             if(Detener){
                 serie.clear();
                 automatico.setEnabled(true);
