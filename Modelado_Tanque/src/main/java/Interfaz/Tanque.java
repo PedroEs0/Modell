@@ -19,176 +19,209 @@ import org.jfree.data.xy.XYSeriesCollection;
  * @author andre
  */
 public class Tanque extends javax.swing.JFrame {
-    /**
-     * Creates new form Tanque
-     */
-    double max = 0;
-    int cont=3;
-    Timer timer;
-    Timer timer2;
-    boolean Detener = false;
-    boolean ejecutando = false;
-    boolean desbordado = false;
-    XYSeries serie = new XYSeries("Datos");
-    int x = 0;
+    // ── Estado de simulación ─────────────────────────────────────────────────
+    private double nivelActual = 0;
+    private int    contadorDesborde = 3;
+    private boolean detenerr    = false;
+    private boolean ejecutando = false;
+    private boolean desbordado = false;
+
+    // ── Gráfica ──────────────────────────────────────────────────────────────
+    private final XYSeries serie = new XYSeries("Altura");
+    private int puntoX = 0;
+
+    // ── Timers ───────────────────────────────────────────────────────────────
+    private Timer timerPrincipal;
+    private Timer timerDesborde;
+
+    // ── Tabla de índices de imagen [entrada(0-2)][salida(0-2)][nivel(0-3)] ──
+    // nivel: 0=bajo  1=ideal  2=alto  3=desborde
+    private static final int[][][] TABLA_IMAGENES = {
+        { {1,10,19,30}, {2,11,20,29}, {3,12,21,28} },  // Abierto entrada
+        { {4,13,22,-1}, {5,14,23,-1}, {6,15,24,-1} },  // Medio  entrada
+        { {7,16,25,-1}, {8,17,26,-1}, {9,18,27,-1} }   // Cerrado entrada
+    };
     public Tanque() {
-        //Iniciar componentes
         initComponents();
-        ImageIcon tanque = new ImageIcon("img/9.png");
-        int alto = Tanque.getHeight();
-        int ancho = Tanque.getWidth();
-        Image tanque_escalado = tanque.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
-        ImageIcon tanque_final = new ImageIcon(tanque_escalado);
-        Tanque.setIcon(tanque_final);
-        
-        //Grafica
+        escalarImagen("img/9.png");
+        inicializarGrafica();
+    }
+    private void inicializarGrafica() {
         XYSeriesCollection datos = new XYSeriesCollection(serie);
-
         JFreeChart grafica = ChartFactory.createXYLineChart(
-                "Altura Vs Tiempo",
-                "Tiempo",
-                "Altura",
-                datos
-        );
-
+                "Altura Vs Tiempo", "Tiempo", "Altura", datos);
         ChartPanel panel = new ChartPanel(grafica);
-
         panel.setPreferredSize(Grafica.getSize());
-
-        Grafica.setLayout(new java.awt.BorderLayout());
-
+        Grafica.setLayout(new BorderLayout());
         Grafica.removeAll();
         Grafica.add(panel, BorderLayout.CENTER);
-
         Grafica.revalidate();
         Grafica.repaint();
     }
-    public void agregarDato(double y) {
-        serie.add(x, y);
-        x++;
-    }
-    public void Cambiar_Imagen(double tanque_nivel) {
+    
+    // ── Helpers de nivel y válvulas ──────────────────────────────────────────
 
+    /** Devuelve el caudal de una válvula: abierto=1, medio=0.5, cerrado=0 */
+    private double getValorValvula(javax.swing.JRadioButton abierto,
+                                   javax.swing.JRadioButton medio) {
+        if (abierto.isSelected()) return 1.0;
+        if (medio  .isSelected()) return 0.5;
+        return 0.0;
+    }
+
+    /** Clasifica el nivel actual: 0=bajo 1=ideal 2=alto 3=desborde */
+    private int clasificarNivel(int ideal, int max) {
+        if (nivelActual > max * 1.1)           return 3;
+        if (nivelActual < ideal - ideal / 2.0) return 0;
+        if (nivelActual < ideal + 2)           return 1;
+        return 2;
+    }
+
+    /** Índice de entrada (fila en la tabla): 0=abierto 1=medio 2=cerrado */
+    private int indiceEntrada() {
+        if (Abierto_Entrada.isSelected()) return 0;
+        if (Medio_Entrada  .isSelected()) return 1;
+        return 2;
+    }
+
+    /** Índice de salida (columna en la tabla): 0=abierto 1=medio 2=cerrado */
+    private int indiceSalida() {
+        if (Abierto_Salida.isSelected()) return 0;
+        if (Medio_Salida  .isSelected()) return 1;
+        return 2;
+    }
+
+    // ── Imagen del tanque ────────────────────────────────────────────────────
+
+    private void escalarImagen(String ruta) {
+        ImageIcon icono = new ImageIcon(ruta);
+        Image escalada  = icono.getImage()
+                .getScaledInstance(Tanque.getWidth(), Tanque.getHeight(), Image.SCALE_SMOOTH);
+        Tanque.setIcon(new ImageIcon(escalada));
+    }
+
+    private void actualizarImagen() {
+        int ideal = Integer.parseInt(CantidadIdeal.getText());
+        int max   = Integer.parseInt(CantidadMax  .getText());
+        int nivel = clasificarNivel(ideal, max);
+        int fila  = indiceEntrada();
+        int col   = indiceSalida();
+
+        // Las imágenes de desborde sólo existen para entrada ABIERTA; para las
+        // demás combinaciones no hay índice de desborde (-1), se ignora.
+        int idx = TABLA_IMAGENES[fila][col][nivel];
+        if (idx < 0) return;
+        escalarImagen("img/" + idx + ".png");
+    }
+
+    // ── Lógica de simulación ─────────────────────────────────────────────────
+
+    private void agregarDato() {
+        serie.add(puntoX++, nivelActual);
+    }
+
+    private void calcularNivel(int canMax) {
+        double entradaDelta = getValorValvula(Abierto_Entrada, Medio_Entrada);
+        double salidaDelta  = getValorValvula(Abierto_Salida,  Medio_Salida );
+
+        if (nivelActual < canMax * 1.2) nivelActual += entradaDelta;
+        if (nivelActual > 0)            nivelActual -= salidaDelta;
+        if (nivelActual < 0)            nivelActual  = 0;
+    }
+
+    private void manejarDesborde(int canIdeal, int canMax) {
+        // Fuerza entrada cerrada y salida abierta para vaciar
+        Cerrado_Entrada.setSelected(true);
+        Abierto_Salida.setSelected(true);
+
+        // Cuando el tanque esté completamente vacío, termina el modo desborde
+        if (nivelActual <= 0) {
+            nivelActual = 0;
+            desbordado = false;
+            mensaje.setText("Tanque vaciado. Puede reiniciar la simulación.");
+            detenerSimulacion();
+        }
+    }
+
+    private void detenerSimulacion() {
+        serie.clear();
+        automatico.setEnabled(true);
+        puntoX      = 0;
+        nivelActual = 0;
+        timerPrincipal.stop();
+    }
+
+    private void iniciarTimerPrincipal(int canIdeal, int canMax) {
+        timerPrincipal = new Timer(100, e -> {
+            cantidadL.setText(nivelActual + " m");
+            actualizarImagen();
+            agregarDato();
+
+            if (desbordado) manejarDesborde(canIdeal, canMax);
+
+            calcularNivel(canMax);
+
+            if (nivelActual > canMax * 1.1 && !desbordado) {
+                desbordado = true;
+                actualizarImagen();
+                contadorDesborde = 3;
+                timerPrincipal.stop();
+                iniciarTimerDesborde(canIdeal, canMax);
+            }
+
+            if (detenerr) detenerSimulacion();
+        });
+        timerPrincipal.start();
+    }
+
+    private void iniciarTimerDesborde(int canIdeal, int canMax) {
+        timerDesborde = new Timer(1000, e -> {
+            agregarDato();
+            actualizarImagen();
+            mensaje.setText("¡Desborde detectado! Vaciando tanque en "
+                    + contadorDesborde + " s");
+            if (contadorDesborde-- < 0) {
+                mensaje.setText("Vaciando tanque...");
+                timerDesborde.stop();
+                timerPrincipal.start();
+            }
+        });
+        timerDesborde.start();
+    }
+
+    private void configurarModoAutomatico(boolean automatico) {
+        if (automatico) {
+            Abierto_Entrada.setSelected(true);
+            Medio_Salida   .setSelected(true);
+        } else {
+            Cerrado_Entrada.setSelected(true);
+            Cerrado_Salida .setSelected(true);
+        }
+        boolean manual = !automatico;
+        Abierto_Entrada.setEnabled(manual);
+        Medio_Entrada  .setEnabled(manual);
+        Cerrado_Entrada.setEnabled(manual);
+        Abierto_Salida .setEnabled(manual);
+        Medio_Salida   .setEnabled(manual);
+        Cerrado_Salida .setEnabled(manual);
+    }
+
+    // ── Validación de campos ─────────────────────────────────────────────────
+
+    /** Devuelve un mensaje de error o "" si todo es válido */
+    private String validarCampos() {
+        if (CantidadIdeal.getText().isEmpty() || CantidadMax.getText().isEmpty())
+            return "¡Campos vacíos!";
+        int canMax   = Integer.parseInt(CantidadMax  .getText());
         int canIdeal = Integer.parseInt(CantidadIdeal.getText());
-        int canMax = Integer.parseInt(CantidadMax.getText());
-        ImageIcon tanque=new ImageIcon("img/0.png");
-        int margenIdeal =2;
-        
-        
-        if(Abierto_Entrada.isSelected()){
-            
-            if(Abierto_Salida.isSelected()){
-                if (max>canMax) {
-                    tanque = new ImageIcon("img/30.png");
-                }else{
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/1.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/10.png");
-                }else if(max>=canIdeal+margenIdeal ){
-                    tanque = new ImageIcon("img/19.png");
-                }
-                }
-            }else if(Medio_Salida.isSelected()){
-                if (max>canMax) {
-                    tanque = new ImageIcon("img/29.png");
-                }else{
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/2.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/11.png");
-                }else if(max>=canIdeal+margenIdeal ){
-                    tanque = new ImageIcon("img/20.png");
-                }
-                }
-            }else if(Cerrado_Salida.isSelected()){
-                if (max>canMax) {
-                    tanque = new ImageIcon("img/28.png");
-                }else{
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/3.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/12.png");
-                }else if(max>=canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/21.png");
-                }
-                }
-            }
-            
-            
-        }
-        else if(Medio_Entrada.isSelected()){
-            
-            if(Abierto_Salida.isSelected()){
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/4.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/13.png");
-                }else if(max>=canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/22.png");
-                }
-            }else if(Medio_Salida.isSelected()){
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/5.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/14.png");
-                }else if(max>=canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/23.png");
-                }
-            }else if(Cerrado_Salida.isSelected()){
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/6.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/15.png");
-                }else if(max>=canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/24.png");
-                }
-            }
-            
-            
-        }
-        else if(Cerrado_Entrada.isSelected()){
-            
-            if(Abierto_Salida.isSelected()){
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/7.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/16.png");
-                }else if(max>=canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/25.png");
-                }
-            }else if(Medio_Salida.isSelected()){
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/8.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/17.png");
-                }else if(max>=canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/26.png");
-                }
-            }else if(Cerrado_Salida.isSelected()){
-                if(max<canIdeal-(canIdeal/2)){
-                    tanque = new ImageIcon("img/9.png");
-                }else if(max>=canIdeal-(canIdeal/2) && max<canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/18.png");
-                }else if(max>=canIdeal+margenIdeal){
-                    tanque = new ImageIcon("img/27.png");
-                }
-            }
-        }
-        
-
-        //ajuste de imagen 
-        int alto = Tanque.getHeight();
-        int ancho = Tanque.getWidth();
-        Image tanque_escalado = tanque.getImage().getScaledInstance(ancho,alto,Image.SCALE_SMOOTH);
-        Tanque.setIcon(new ImageIcon(tanque_escalado));
+        if (canMax < 0 || canIdeal < 0)    return "Cantidad inválida";
+        if (canMax < canIdeal + 2)          return "La cantidad máxima es menor a la ideal";
+        return "";
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
+    // ── Eventos de botones ───────────────────────────────────────────────────
+
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -518,126 +551,25 @@ public class Tanque extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void INICIARActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_INICIARActionPerformed
-        //valida que los campos no esten vacios
-    if (CantidadIdeal.getText().isEmpty() || CantidadMax.getText().isEmpty()) {
-        mensaje.setText("Campos vacios!!");
-        return;
-    }
-    int canM = Integer.parseInt(CantidadMax.getText());
-    int canIdeal = Integer.parseInt(CantidadIdeal.getText());
-    
-    //valida que la cantidad ideal no sea mayor a el maximo
-    if (canM < canIdeal+2) {
-        mensaje.setText("La cantidad maxima es menor a la cantidad ideal");
-        return;
-    }
-    if (canM<0 || canIdeal<0) {
-        mensaje.setText("Cantidad invalida");
-        return;
-    }
-    //se limpia el label de mensaje cada que de la a iniciar
-    mensaje.setText("");
-    Detener = false;
-    
-    if (!ejecutando) {
-        ejecutando = true;
-        automatico.setEnabled(false);
-        if(automatico.isSelected()){
-            Abierto_Entrada.setSelected(true);
-            Medio_Salida.setSelected(true);
-            
-            
-            Abierto_Salida.setEnabled(false);
-            Cerrado_Salida.setEnabled(false);
-            Medio_Salida.setEnabled(false);
-            Abierto_Entrada.setEnabled(false);
-            Cerrado_Entrada.setEnabled(false);
-            Medio_Entrada.setEnabled(false);
-        }else{
-            Abierto_Entrada.setSelected(false);
-            Medio_Salida.setSelected(false);
-            
-            
-            Abierto_Salida.setEnabled(true);
-            Cerrado_Salida.setEnabled(true);
-            Medio_Salida.setEnabled(true);
-            Abierto_Entrada.setEnabled(true);
-            Cerrado_Entrada.setEnabled(true);
-            Medio_Entrada.setEnabled(true);
+           String error = validarCampos();
+        if (!error.isEmpty()) { mensaje.setText(error); return; }
+
+        int canMax   = Integer.parseInt(CantidadMax  .getText());
+        int canIdeal = Integer.parseInt(CantidadIdeal.getText());
+
+        mensaje.setText("");
+        detenerr = false;
+
+        if (!ejecutando) {
+            ejecutando = true;
+            automatico.setEnabled(false);
+            configurarModoAutomatico(automatico.isSelected());
+            iniciarTimerPrincipal(canIdeal, canMax);
         }
-        
-        //timer sirve para poder hacer la comparacion en intervalos de tiempo para que se vea mas fluido en la simulacion donde se da el tiempo en milisegundos
-        timer = new Timer(100, e -> {
-            //envio de los datos en porcentaje y en litro de la cantidad actual
- 
-            cantidadL.setText(max  + "m");
-            
-            Cambiar_Imagen(max);
-            agregarDato(max);
-            if(desbordado){
-                Cerrado_Entrada.setSelected(true);
-                Abierto_Salida.setSelected(true);
-                if (max<=canIdeal+0.5 && max>=canIdeal-0.5) {
-                    Medio_Entrada.setSelected(true);
-                    Medio_Salida.setSelected(true);
-                    desbordado=false;
-                }
-            }
-            if(max<canM*1.2){
-                if(Abierto_Entrada.isSelected()){
-                    max+=1;
-                }else if(Medio_Entrada.isSelected()){ 
-                    max+=0.5;
-                }else if(Cerrado_Entrada.isSelected()){
-                    max+=0;
-                }
-            }
-            if (max>0) {
-                if(Abierto_Salida.isSelected()){
-                    max-=1;
-                }else if(Medio_Salida.isSelected()){
-                    max-=0.5;
-                }else if(Cerrado_Salida.isSelected()){
-                    max-=0;
-                }
-            }else if(max<0){
-                max=0;
-            }
-                
-            if (max>canM*1.1) {
-            Cambiar_Imagen(max);
-            cont=3;
-            desbordado=true;
-            timer.stop();
-            timer2 = new Timer(1000, a -> {
-                agregarDato(max);
-                Cambiar_Imagen(max);
-                mensaje.setText("La cantidad es superior a la maxima, iniciando contencion del desborde en "+cont+" segundos");
-                cont--;
-                if (cont<0){
-                    mensaje.setText("");
-                    timer.start();
-                    timer2.stop();
-                }
-            });
-            timer2.start();
-            }
-            if(Detener){
-                serie.clear();
-                automatico.setEnabled(true);
-                x=0;
-                max=0;
-                timer.stop();
-            }
-        });
-        //aqui se inicia todo lo que esta dentro de *time*
-        timer.start();
-    }
-        
     }//GEN-LAST:event_INICIARActionPerformed
 
     private void detenerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detenerActionPerformed
-        Detener=true;
+        detenerr=true;
         ejecutando=false;
     }//GEN-LAST:event_detenerActionPerformed
 
@@ -650,35 +582,19 @@ public class Tanque extends javax.swing.JFrame {
     }//GEN-LAST:event_Abierto_EntradaActionPerformed
 
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            for (javax.swing.UIManager.LookAndFeelInfo info :
+                    javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Tanque.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Tanque.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Tanque.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Tanque.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(Tanque.class.getName())
+                    .log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new Tanque().setVisible(true);
-            }
-        });
+        java.awt.EventQueue.invokeLater(() -> new Tanque().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
