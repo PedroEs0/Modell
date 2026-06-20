@@ -25,6 +25,7 @@ public class Tanque extends javax.swing.JFrame {
     private boolean detenerr    = false;
     private boolean ejecutando = false;
     private boolean desbordado = false;
+    private boolean llenando = true; // true = llenando, false = vaciando
 
     // ── Gráfica ──────────────────────────────────────────────────────────────
     private final XYSeries serie = new XYSeries("Altura");
@@ -130,16 +131,14 @@ public class Tanque extends javax.swing.JFrame {
     }
 
     private void manejarDesborde(int canIdeal, int canMax) {
-        // Fuerza entrada cerrada y salida abierta para vaciar
         Cerrado_Entrada.setSelected(true);
         Abierto_Salida.setSelected(true);
 
-        // Cuando el tanque esté completamente vacío, termina el modo desborde
         if (nivelActual <= 0) {
             nivelActual = 0;
             desbordado = false;
-            mensaje.setText("Tanque vaciado. Puede reiniciar la simulación.");
-            detenerSimulacion();
+            mensaje.setText("Tanque vaciado. Puede continuar o detener la simulación.");
+            // Ya NO llama a detenerSimulacion() — la simulación sigue corriendo
         }
     }
 
@@ -157,7 +156,26 @@ public class Tanque extends javax.swing.JFrame {
             actualizarImagen();
             agregarDato();
 
-            if (desbordado) manejarDesborde(canIdeal, canMax);
+            if (desbordado) {
+                manejarDesborde(canIdeal, canMax);
+            } else if (automatico.isSelected()) {
+                // ── Modo automático: ciclo llenar → vaciar → llenar … ──
+                if (llenando) {
+                    Abierto_Entrada.setSelected(true);
+                    Cerrado_Salida.setSelected(true);
+                    if (nivelActual >= canMax) {
+                        llenando = false;
+                        mensaje.setText("Tanque lleno. Vaciando...");
+                    }
+                } else {
+                    Cerrado_Entrada.setSelected(true);
+                    Abierto_Salida.setSelected(true);
+                    if (nivelActual <= 0) {
+                        llenando = true;
+                        mensaje.setText("Tanque vacío. Llenando...");
+                    }
+                }
+            }
 
             calcularNivel(canMax);
 
@@ -551,14 +569,15 @@ public class Tanque extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void INICIARActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_INICIARActionPerformed
-           String error = validarCampos();
+        String error = validarCampos();
         if (!error.isEmpty()) { mensaje.setText(error); return; }
 
-        int canMax   = Integer.parseInt(CantidadMax  .getText());
+        int canMax   = Integer.parseInt(CantidadMax.getText());
         int canIdeal = Integer.parseInt(CantidadIdeal.getText());
 
         mensaje.setText("");
         detenerr = false;
+        llenando = true; 
 
         if (!ejecutando) {
             ejecutando = true;
