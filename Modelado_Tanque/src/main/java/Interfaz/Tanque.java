@@ -1,4 +1,5 @@
 /*
+CODIGO CON IA
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
@@ -131,14 +132,20 @@ public class Tanque extends javax.swing.JFrame {
     }
 
     private void manejarDesborde(int canIdeal, int canMax) {
-        Cerrado_Entrada.setSelected(true);
-        Abierto_Salida.setSelected(true);
+        if (automatico.isSelected()) {
+            // En modo automático el sistema sigue vaciando por su cuenta
+            Cerrado_Entrada.setSelected(true);
+            Abierto_Salida.setSelected(true);
+        } else {
+            // En modo manual NO tocamos las válvulas: el usuario debe
+            // cerrar la entrada y abrir la salida por su cuenta para vaciar.
+            mensaje.setText("¡Desborde! Cierre la entrada y abra la salida para vaciar el tanque.");
+        }
 
         if (nivelActual <= 0) {
             nivelActual = 0;
             desbordado = false;
             mensaje.setText("Tanque vaciado. Puede continuar o detener la simulación.");
-            // Ya NO llama a detenerSimulacion() — la simulación sigue corriendo
         }
     }
 
@@ -196,10 +203,14 @@ public class Tanque extends javax.swing.JFrame {
         timerDesborde = new Timer(1000, e -> {
             agregarDato();
             actualizarImagen();
-            mensaje.setText("¡Desborde detectado! Vaciando tanque en "
+            mensaje.setText("¡Desborde detectado! Continuando en "
                     + contadorDesborde + " s");
             if (contadorDesborde-- < 0) {
-                mensaje.setText("Vaciando tanque...");
+                if (automatico.isSelected()) {
+                    mensaje.setText("Vaciando tanque...");
+                } else {
+                    mensaje.setText("¡Desborde! Cierre la entrada y abra la salida para vaciar el tanque.");
+                }
                 timerDesborde.stop();
                 timerPrincipal.start();
             }
